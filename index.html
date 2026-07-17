@@ -604,7 +604,6 @@ function buildMenu() {
           <strong>${item.name}</strong>
           ${item.note ? `<span>${item.note}</span>` : ''}
         </div>
-        <div class="drink-price">$${item.price}</div>
         <button class="add-btn" onclick="togglePanel('${id}', event)">＋</button>
       `;
       secDiv.appendChild(card);
@@ -694,7 +693,7 @@ function openCart() {
       div.innerHTML = `
         <div class="cart-item-info">
           <strong>${item.name}</strong>
-          <span>${item.ice} ✦ ${item.sugar} ✦ 大杯 ✦ $${item.price}</span>
+          <span>${item.ice} ✦ ${item.sugar} ✦ 大杯</span>
         </div>
         <button class="remove-btn" onclick="removeCart(${i})">✕</button>
       `;
