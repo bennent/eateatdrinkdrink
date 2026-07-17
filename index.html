@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mr. Wish 希望好茶｜同仁點餐</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #4a7c3f;
+    --green-light: #6aaa5a;
+    --green-pale: #eef6eb;
+    --orange: #e8833a;
+    --yellow: #f5c842;
+    --brown: #7a5c3a;
+    --bg: #f9f6f0;
+    --card: #ffffff;
+    --text: #2b2b2b;
+    --muted: #888;
+    --border: #e0dbd0;
+    --radius: 14px;
+  }
+
+  body {
+    font-family: 'Helvetica Neue', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ─── Header ─── */
+  header {
+    background: var(--green);
+    color: white;
+    padding: 20px 24px 16px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  }
+  header h1 { font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; }
+  header p { font-size: 0.82rem; opacity: 0.85; margin-top: 4px; }
+
+  /* ─── Name Input Screen ─── */
+  #name-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 64px);
+    padding: 32px 20px;
+    gap: 20px;
+  }
+  #name-screen .bubble {
+    background: white;
+    border-radius: var(--radius);
+    padding: 32px 28px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    text-align: center;
+  }
+  #name-screen .bubble h2 { font-size: 1.2rem; color: var(--green); margin-bottom: 8px; }
+  #name-screen .bubble p { color: var(--muted); font-size: 0.88rem; margin-bottom: 20px; }
+  #name-input {
+    width: 100%; padding: 12px 16px; font-size: 1rem;
+    border: 2px solid var(--border); border-radius: 10px;
+    outline: none; transition: border-color 0.2s;
+    font-family: inherit;
+  }
+  #name-input:focus { border-color: var(--green-light); }
+  .btn-start {
+    margin-top: 14px; width: 100%; padding: 14px;
+    background: var(--green); color: white;
+    border: none; border-radius: 10px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: background 0.2s;
+    font-family: inherit;
+  }
+  .btn-start:hover { background: var(--green-light); }
+
+  /* ─── Main Order UI ─── */
+  #order-screen { display: none; padding-bottom: 120px; }
+
+  .user-banner {
+    background: var(--green-pale);
+    border-bottom: 1px solid #c8e4c0;
+    padding: 10px 20px;
+    font-size: 0.88rem;
+    color: var(--green);
+    font-weight: 600;
+  }
+
+  /* ─── Category tabs ─── */
+  .tab-bar {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 12px 16px;
+    background: white;
+    border-bottom: 1px solid var(--border);
+    scrollbar-width: none;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
+  .tab {
+    flex-shrink: 0;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    font-size: 0.82rem;
+    cursor: pointer;
+    background: white;
+    color: var(--text);
+    font-weight: 600;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .tab.active {
+    background: var(--green);
+    color: white;
+    border-color: var(--green);
+  }
+
+  /* ─── Menu sections ─── */
+  .section { padding: 0 16px; }
+  .section-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: white;
+    background: var(--green);
+    padding: 7px 14px;
+    border-radius: 8px;
+    margin: 18px 0 10px;
+    display: inline-block;
+  }
+  .section-title.orange { background: var(--orange); }
+  .section-title.brown  { background: var(--brown); }
+  .section-title.teal   { background: #3a8a8a; }
+  .section-title.purple { background: #7a5c8a; }
+  .section-title.blue   { background: #3a5c8a; }
+
+  /* ─── Drink card ─── */
+  .drink-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    cursor: pointer;
+  }
+  .drink-card:hover { border-color: var(--green-light); box-shadow: 0 2px 8px rgba(74,124,63,0.1); }
+  .drink-card.selected {
+    border-color: var(--green);
+    background: var(--green-pale);
+  }
+  .drink-name { flex: 1; }
+  .drink-name strong { font-size: 0.95rem; display: block; }
+  .drink-name span { font-size: 0.78rem; color: var(--muted); }
+  .drink-price { font-size: 0.88rem; color: var(--brown); font-weight: 700; white-space: nowrap; }
+  .add-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 2px solid var(--green);
+    background: white;
+    color: var(--green);
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    font-weight: 300;
+  }
+  .add-btn:hover { background: var(--green); color: white; }
+
+  /* ─── Custom options panel ─── */
+  .options-panel {
+    display: none;
+    background: #f0f7ee;
+    border: 1.5px solid #c8e4c0;
+    border-radius: 10px;
+    padding: 14px;
+    margin-top: -4px;
+    margin-bottom: 10px;
+  }
+  .options-panel.open { display: block; }
+  .opt-row { margin-bottom: 10px; }
+  .opt-label { font-size: 0.78rem; font-weight: 700; color: var(--green); margin-bottom: 6px; }
+  .opt-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    font-size: 0.8rem;
+    cursor: pointer;
+    background: white;
+    transition: all 0.12s;
+    font-family: inherit;
+  }
+  .chip.selected { background: var(--green); color: white; border-color: var(--green); }
+  .confirm-btn {
+    width: 100%; padding: 10px;
+    background: var(--orange); color: white;
+    border: none; border-radius: 8px;
+    font-size: 0.9rem; font-weight: 700;
+    cursor: pointer; margin-top: 10px;
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+  .confirm-btn:hover { background: #d06a20; }
+
+  /* ─── Cart / Summary bar ─── */
+  .cart-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--green);
+    color: white;
+    padding: 14px 20px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+    z-index: 200;
+    cursor: pointer;
+  }
+  .cart-bar.hidden { display: none; }
+  .cart-icon { font-size: 1.4rem; }
+  .cart-info { flex: 1; }
+  .cart-info strong { display: block; font-size: 0.95rem; }
+  .cart-info span { font-size: 0.78rem; opacity: 0.85; }
+  .cart-arrow { font-size: 1.2rem; }
+
+  /* ─── Cart modal ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 300;
+    align-items: flex-end;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 20px;
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+  }
+  .modal-header h3 { font-size: 1.1rem; color: var(--green); }
+  .close-btn {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--border); border: none;
+    font-size: 1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cart-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .cart-item-info { flex: 1; }
+  .cart-item-info strong { font-size: 0.9rem; }
+  .cart-item-info span { font-size: 0.78rem; color: var(--muted); display: block; }
+  .remove-btn {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #fee; border: 1px solid #fcc;
+    color: #c00; font-size: 0.9rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .submit-btn {
+    width: 100%; padding: 14px;
+    background: var(--green); color: white;
+    border: none; border-radius: 10px;
+    font-size: 1rem; font-weight: 700;
+    cursor: pointer; margin-top: 16px;
+    font-family: inherit;
+  }
+  .submit-btn:hover { background: var(--green-light); }
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .error-msg {
+    background: #fee; border: 1px solid #fcc; color: #c00;
+    border-radius: 8px; padding: 10px 14px; font-size: 0.82rem;
+    margin-top: 10px; display: none;
+  }
+  .error-msg.show { display: block; }
+
+  /* ─── Admin / Stats Panel ─── */
+  #stats-screen { display: none; padding: 20px; }
+  .stats-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+  }
+  .stats-header h2 { font-size: 1.2rem; color: var(--green); font-weight: 800; }
+  .export-btn {
+    padding: 8px 16px; background: var(--orange); color: white;
+    border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+  }
+  .refresh-btn {
+    padding: 8px 16px; background: var(--green); color: white;
+    border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; font-family: inherit; margin-right: 8px;
+  }
+  .person-card {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .person-card h4 { font-size: 0.95rem; color: var(--green); margin-bottom: 8px; }
+  .person-card ul { list-style: none; }
+  .person-card li { font-size: 0.85rem; padding: 3px 0; color: var(--text); }
+  .person-card li span { color: var(--muted); font-size: 0.78rem; }
+  .summary-box {
+    background: var(--green);
+    color: white;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .summary-box h3 { font-size: 1rem; margin-bottom: 10px; opacity: 0.85; }
+  .summary-item {
+    display: flex; justify-content: space-between;
+    font-size: 0.88rem; padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+  }
+  .summary-item:last-child { border: none; }
+  .admin-link {
+    text-align: center;
+    padding: 20px;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .admin-link a { color: var(--green); text-decoration: none; font-weight: 600; }
+
+  /* ─── Done screen ─── */
+  #done-screen {
+    display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    min-height: calc(100vh - 64px);
+    padding: 40px 24px;
+    text-align: center;
+    gap: 16px;
+  }
+  #done-screen .check { font-size: 4rem; }
+  #done-screen h2 { font-size: 1.3rem; color: var(--green); }
+  #done-screen p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+
+  .loading-box { text-align: center; color: var(--muted); padding: 40px; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🧋 Mr. Wish 希望好茶</h1>
+  <p id="header-sub">同仁點餐 ✦ 一律大杯</p>
+</header>
+
+<!-- SCREEN 1: Name Input -->
+<div id="name-screen">
+  <div class="bubble">
+    <h2>👋 請先輸入你的名字</h2>
+    <p>讓請客的同仁知道你點了什麼～</p>
+    <input id="name-input" type="text" placeholder="例如：小美、王工程師…" maxlength="12" />
+    <button class="btn-start" onclick="startOrder()">進入點餐 →</button>
+  </div>
+  <div class="admin-link">統計管理員？<a href="#" onclick="showStats(); return false;">查看訂單統計</a></div>
+</div>
+
+<!-- SCREEN 2: Order -->
+<div id="order-screen">
+  <div class="user-banner" id="user-banner"></div>
+
+  <div class="tab-bar" id="tab-bar"></div>
+
+  <div id="menu-content"></div>
+
+  <div class="cart-bar hidden" id="cart-bar" onclick="openCart()">
+    <div class="cart-icon">🛒</div>
+    <div class="cart-info">
+      <strong id="cart-count-label">尚未選擇</strong>
+      <span id="cart-preview"></span>
+    </div>
+    <div class="cart-arrow">查看 ›</div>
+  </div>
+</div>
+
+<!-- SCREEN 3: Done -->
+<div id="done-screen">
+  <div class="check">✅</div>
+  <h2>成功送出點餐！</h2>
+  <p id="done-msg"></p>
+</div>
+
+<!-- SCREEN 4: Stats -->
+<div id="stats-screen">
+  <div class="stats-header">
+    <h2>📋 訂單統計</h2>
+    <div>
+      <button class="refresh-btn" onclick="renderStats()">🔄 重新整理</button>
+      <button class="export-btn" onclick="exportTXT()">匯出文字</button>
+    </div>
+  </div>
+  <div id="stats-content"></div>
+  <div class="admin-link"><a href="#" onclick="location.reload(); return false;">← 返回點餐</a></div>
+</div>
+
+<!-- Cart Modal -->
+<div class="modal-overlay" id="cart-modal" onclick="closeCartIfBg(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🧋 我的點餐</h3>
+      <button class="close-btn" onclick="closeCart()">✕</button>
+    </div>
+    <div id="cart-items"></div>
+    <button class="submit-btn" id="submit-btn" onclick="submitOrder()">✅ 確認送出</button>
+    <div class="error-msg" id="submit-error"></div>
+  </div>
+</div>
+
+<script>
+// ─── Config ───
+// 部署 Google Apps Script Web App 後，把網址貼在這裡（詳見交付說明的部署步驟）
+const CONFIG = {
+  APPS_SCRIPT_URL: 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE'
+};
+
+// ─── Menu Data ───
+const MENU = [
+  {
+    cat: '得獎好茶', color: 'green',
+    items: [
+      { name: '黃枝香烏龍', price: 90 },
+      { name: '黃枝香蜜烏奶茶', price: 120 },
+      { name: '粽夏一號', note: '鹼粒QQ+焙茶粉粿+波霜', price: 65 },
+      { name: '粽夏奶烏', note: '鹼粒QQ', price: 75 },
+    ]
+  },
+  {
+    cat: '夏遇愛文', color: 'orange',
+    items: [
+      { name: '芒果奶露', price: 95 },
+      { name: '楊枝甘露', price: 95 },
+      { name: '芒果厚奶', price: 110 },
+      { name: '愛文芒果冰沙', price: 115 },
+    ]
+  },
+  {
+    cat: '五窨綠茶', color: 'green',
+    items: [
+      { name: '五窨初茉綠茶', price: 90 },
+      { name: '五窨初茉奶綠', price: 120 },
+      { name: '五窨初茉鮮奶綠', price: 130 },
+      { name: '五窨粉粿奶綠', price: 69 },
+      { name: '五窨冰萃柳橙綠', price: 85 },
+      { name: '五窨雪頂粉粿', price: 89 },
+    ]
+  },
+  {
+    cat: '沁涼冰沙', color: 'teal',
+    items: [
+      { name: '草莓雪頂', price: 95 },
+      { name: '草莓厚奶', price: 95 },
+    ]
+  },
+  {
+    cat: '嚴選茶', color: 'brown',
+    items: [
+      { name: '高山青茶', price: 70 },
+      { name: '芙香綠茶', price: 70 },
+      { name: '熟成紅茶', price: 70 },
+      { name: '小焙烏龍', price: 70 },
+      { name: '香蘋紅茶', price: 80 },
+      { name: '蜜桃紅茶', price: 80 },
+    ]
+  },
+  {
+    cat: '鮮果茶', color: 'green',
+    items: [
+      { name: '光果茶', note: '百香+柳橙+檸檬', price: 65 },
+      { name: '百香綠茶', price: 110 },
+      { name: '柳橙綠茶', price: 120 },
+      { name: '蜂蜜檸檬', price: 110 },
+      { name: '紅心芭樂梅', price: 120 },
+      { name: '白蔗青', price: 110 },
+    ]
+  },
+  {
+    cat: '台灣蕎麥冬瓜', color: 'teal',
+    items: [
+      { name: '黃金蕎麥', price: 80 },
+      { name: '蕎麥青茶', price: 80 },
+      { name: '蕎麥鮮奶', price: 120 },
+      { name: '慢熟冬瓜露', price: 60 },
+      { name: '冬瓜烏龍', price: 80 },
+      { name: '冬瓜檸檬', price: 55 },
+    ]
+  },
+  {
+    cat: '熬醬鮮果', color: 'orange',
+    items: [
+      { name: '荔枝紅茶', price: 90 },
+      { name: '荔枝小焙烏龍', price: 110 },
+      { name: '脆梅青', price: 100 },
+      { name: '葡萄果茶', price: 110 },
+      { name: '蜜桃果粒茶', price: 110 },
+      { name: '芒果果粒茶', price: 140 },
+      { name: '葡萄果粒啵啵', price: 130 },
+      { name: '荔枝香檸啵啵', price: 130 },
+    ]
+  },
+  {
+    cat: '酪農鮮乳', color: 'brown',
+    items: [
+      { name: '紅茶鮮奶', price: 110 },
+      { name: '小焙烏龍鮮奶茶', price: 120 },
+      { name: '波霜珍珠鮮奶茶', price: 130 },
+      { name: '布丁鮮奶茶', price: 130 },
+    ]
+  },
+  {
+    cat: '極選醇奶', color: 'purple',
+    items: [
+      { name: '極選奶茶', price: 90 },
+      { name: '波霸珍珠奶茶', price: 110 },
+      { name: '手煮泰式奶茶', price: 65 },
+    ]
+  },
+];
+
+const ICE_OPTS   = ['去冰', '微冰', '熱'];
+const SUGAR_OPTS = ['全糖', '半糖', '微糖', '無糖'];
+
+// ─── State ───
+let currentUser = '';
+let cart = [];   // { name, note, price, ice, sugar }
+let openPanelId = null;
+let tempOptions = {};
+let lastStatsOrders = []; // 給 exportTXT 沿用最後一次讀到的統計資料
+
+// ─── Name screen ───
+function startOrder() {
+  const val = document.getElementById('name-input').value.trim();
+  if (!val) { document.getElementById('name-input').focus(); return; }
+  currentUser = val;
+  document.getElementById('name-screen').style.display = 'none';
+  document.getElementById('order-screen').style.display = 'block';
+  document.getElementById('user-banner').textContent = `👤 ${currentUser}  ✦  一律大杯`;
+  document.getElementById('header-sub').textContent = `${currentUser} 的點餐 ✦ 一律大杯`;
+  buildMenu();
+}
+
+// ─── Build menu ───
+function buildMenu() {
+  const tabBar = document.getElementById('tab-bar');
+  const content = document.getElementById('menu-content');
+  tabBar.innerHTML = '';
+  content.innerHTML = '';
+
+  MENU.forEach((sec, si) => {
+    // Tab
+    const tab = document.createElement('button');
+    tab.className = 'tab' + (si === 0 ? ' active' : '');
+    tab.textContent = sec.cat;
+    tab.onclick = () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('sec-' + si).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    tabBar.appendChild(tab);
+
+    // Section
+    const secDiv = document.createElement('div');
+    secDiv.className = 'section';
+    secDiv.id = 'sec-' + si;
+
+    const title = document.createElement('div');
+    title.className = `section-title ${sec.color}`;
+    title.textContent = sec.cat + ' 系列';
+    secDiv.appendChild(title);
+
+    sec.items.forEach((item, ii) => {
+      const id = `${si}_${ii}`;
+
+      const card = document.createElement('div');
+      card.className = 'drink-card';
+      card.id = 'card-' + id;
+      card.innerHTML = `
+        <div class="drink-name">
+          <strong>${item.name}</strong>
+          ${item.note ? `<span>${item.note}</span>` : ''}
+        </div>
+        <div class="drink-price">$${item.price}</div>
+        <button class="add-btn" onclick="togglePanel('${id}', event)">＋</button>
+      `;
+      secDiv.appendChild(card);
+
+      // Options panel
+      const panel = document.createElement('div');
+      panel.className = 'options-panel';
+      panel.id = 'panel-' + id;
+      panel.innerHTML = `
+        <div class="opt-row">
+          <div class="opt-label">🧊 冰量</div>
+          <div class="opt-chips" id="ice-${id}">
+            ${ICE_OPTS.map(o => `<button class="chip" onclick="selectOpt('${id}','ice','${o}',this)">${o}</button>`).join('')}
+          </div>
+        </div>
+        <div class="opt-row">
+          <div class="opt-label">🍬 甜度</div>
+          <div class="opt-chips" id="sugar-${id}">
+            ${SUGAR_OPTS.map(o => `<button class="chip" onclick="selectOpt('${id}','sugar','${o}',this)">${o}</button>`).join('')}
+          </div>
+        </div>
+        <button class="confirm-btn" onclick="addToCart('${id}','${item.name}',${item.price})">加入點餐 ✓</button>
+      `;
+      secDiv.appendChild(panel);
+    });
+
+    content.appendChild(secDiv);
+  });
+}
+
+function togglePanel(id, e) {
+  e.stopPropagation();
+  if (openPanelId && openPanelId !== id) {
+    document.getElementById('panel-' + openPanelId).classList.remove('open');
+    document.getElementById('card-' + openPanelId).classList.remove('selected');
+  }
+  const panel = document.getElementById('panel-' + id);
+  const card  = document.getElementById('card-' + id);
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  card.classList.toggle('selected', !isOpen);
+  openPanelId = isOpen ? null : id;
+  if (!tempOptions[id]) tempOptions[id] = {};
+}
+
+function selectOpt(id, type, val, el) {
+  const row = document.getElementById((type === 'ice' ? 'ice-' : 'sugar-') + id);
+  row.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  if (!tempOptions[id]) tempOptions[id] = {};
+  tempOptions[id][type] = val;
+}
+
+function addToCart(id, name, price) {
+  const opts = tempOptions[id] || {};
+  if (!opts.ice)   { alert('請選擇冰量！'); return; }
+  if (!opts.sugar) { alert('請選擇甜度！'); return; }
+  cart.push({ name, price, ice: opts.ice, sugar: opts.sugar });
+  // Close panel
+  document.getElementById('panel-' + id).classList.remove('open');
+  document.getElementById('card-' + id).classList.remove('selected');
+  openPanelId = null;
+  delete tempOptions[id];
+  updateCartBar();
+}
+
+function updateCartBar() {
+  const bar = document.getElementById('cart-bar');
+  if (cart.length === 0) { bar.classList.add('hidden'); return; }
+  bar.classList.remove('hidden');
+  document.getElementById('cart-count-label').textContent = `已選 ${cart.length} 杯`;
+  document.getElementById('cart-preview').textContent = cart.map(c => c.name).join('、');
+}
+
+// ─── Cart Modal ───
+function openCart() {
+  const modal = document.getElementById('cart-modal');
+  const itemsDiv = document.getElementById('cart-items');
+  document.getElementById('submit-error').classList.remove('show');
+  itemsDiv.innerHTML = '';
+  if (cart.length === 0) {
+    itemsDiv.innerHTML = '<p style="text-align:center;color:#aaa;padding:20px">尚未加入任何飲料</p>';
+  } else {
+    cart.forEach((item, i) => {
+      const div = document.createElement('div');
+      div.className = 'cart-item';
+      div.innerHTML = `
+        <div class="cart-item-info">
+          <strong>${item.name}</strong>
+          <span>${item.ice} ✦ ${item.sugar} ✦ 大杯 ✦ $${item.price}</span>
+        </div>
+        <button class="remove-btn" onclick="removeCart(${i})">✕</button>
+      `;
+      itemsDiv.appendChild(div);
+    });
+  }
+  modal.classList.add('open');
+}
+
+function closeCart() {
+  document.getElementById('cart-modal').classList.remove('open');
+}
+
+function closeCartIfBg(e) {
+  if (e.target === document.getElementById('cart-modal')) closeCart();
+}
+
+function removeCart(i) {
+  cart.splice(i, 1);
+  updateCartBar();
+  if (cart.length === 0) {
+    document.getElementById('cart-modal').classList.remove('open');
+  } else {
+    openCart();
+  }
+}
+
+// ─── Submit order to Google Apps Script ───
+async function submitOrder() {
+  if (cart.length === 0) return;
+  if (!CONFIG.APPS_SCRIPT_URL || CONFIG.APPS_SCRIPT_URL.includes('PASTE_YOUR')) {
+    showSubmitError('尚未設定 Apps Script 網址，請聯絡管理員設定 CONFIG.APPS_SCRIPT_URL。');
+    return;
+  }
+
+  const entry = { user: currentUser, time: new Date().toLocaleString('zh-TW'), items: [...cart] };
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '送出中…';
+  document.getElementById('submit-error').classList.remove('show');
+
+  try {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 避免觸發 CORS 預檢
+      body: JSON.stringify(entry),
+    });
+    if (!res.ok) throw new Error('網路回應異常 (' + res.status + ')');
+    const data = await res.json();
+    if (data.status !== 'ok') throw new Error(data.message || '寫入失敗');
+
+    cart = [];
+    updateCartBar();
+    document.getElementById('cart-modal').classList.remove('open');
+    document.getElementById('order-screen').style.display = 'none';
+    const done = document.getElementById('done-screen');
+    done.style.display = 'flex';
+    document.getElementById('done-msg').textContent =
+      `${currentUser}，你點了 ${entry.items.length} 杯！\n` +
+      entry.items.map(c => `${c.name}（${c.ice} / ${c.sugar}）`).join('、');
+  } catch (err) {
+    showSubmitError('送出失敗，請檢查網路後再試一次。（' + err.message + '）');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✅ 確認送出';
+  }
+}
+
+function showSubmitError(msg) {
+  const box = document.getElementById('submit-error');
+  box.textContent = msg;
+  box.classList.add('show');
+}
+
+// ─── Stats ───
+function showStats() {
+  document.getElementById('name-screen').style.display = 'none';
+  document.getElementById('order-screen').style.display = 'none';
+  document.getElementById('done-screen').style.display = 'none';
+  document.getElementById('stats-screen').style.display = 'block';
+  renderStats();
+}
+
+// 把後端回傳的「每列一個飲料品項」的扁平資料，依姓名＋時間戳記重新分組成訂單
+function groupRowsIntoOrders(rows) {
+  const map = new Map();
+  rows.forEach(row => {
+    const key = row.user + '｜' + row.time;
+    if (!map.has(key)) map.set(key, { user: row.user, time: row.time, items: [] });
+    map.get(key).items.push({
+      name: row.name,
+      ice: row.ice,
+      sugar: row.sugar,
+      price: Number(row.price) || 0,
+    });
+  });
+  return Array.from(map.values());
+}
+
+async function renderStats() {
+  const content = document.getElementById('stats-content');
+
+  if (!CONFIG.APPS_SCRIPT_URL || CONFIG.APPS_SCRIPT_URL.includes('PASTE_YOUR')) {
+    content.innerHTML = '<div class="loading-box">尚未設定 Apps Script 網址，請聯絡管理員設定 CONFIG.APPS_SCRIPT_URL。</div>';
+    return;
+  }
+
+  content.innerHTML = '<div class="loading-box">讀取中…</div>';
+
+  let rows;
+  try {
+    const res = await fetch(CONFIG.APPS_SCRIPT_URL, { method: 'GET' });
+    if (!res.ok) throw new Error('網路回應異常 (' + res.status + ')');
+    rows = await res.json();
+  } catch (err) {
+    content.innerHTML = '<div class="loading-box">讀取失敗，請按「重新整理」再試一次。（' + err.message + '）</div>';
+    return;
+  }
+
+  const orders = groupRowsIntoOrders(rows);
+  lastStatsOrders = orders;
+  content.innerHTML = '';
+
+  if (orders.length === 0) {
+    content.innerHTML = '<p style="text-align:center;color:#aaa;padding:40px">還沒有人點餐</p>';
+    return;
+  }
+
+  // Aggregate
+  const drinkCount = {};
+  orders.forEach(o => o.items.forEach(item => {
+    const key = item.name;
+    drinkCount[key] = (drinkCount[key] || 0) + 1;
+  }));
+
+  // Summary box
+  const sumBox = document.createElement('div');
+  sumBox.className = 'summary-box';
+  sumBox.innerHTML = `<h3>🧋 飲料彙整（共 ${orders.reduce((a,o)=>a+o.items.length,0)} 杯）</h3>` +
+    Object.entries(drinkCount)
+      .sort((a,b) => b[1]-a[1])
+      .map(([name, cnt]) => `<div class="summary-item"><span>${name}</span><span><strong>${cnt} 杯</strong></span></div>`)
+      .join('');
+  content.appendChild(sumBox);
+
+  // Per person
+  const h3 = document.createElement('h3');
+  h3.style.cssText = 'font-size:0.95rem;color:var(--green);margin-bottom:10px';
+  h3.textContent = '👤 每人點餐明細';
+  content.appendChild(h3);
+
+  orders.forEach(o => {
+    const card = document.createElement('div');
+    card.className = 'person-card';
+    card.innerHTML = `<h4>${o.user} <small style="font-weight:400;color:#aaa;font-size:0.75rem">${o.time}</small></h4>
+      <ul>${o.items.map(item =>
+        `<li>✦ ${item.name} <span>（${item.ice} / ${item.sugar} / 大杯 / $${item.price}）</span></li>`
+      ).join('')}</ul>`;
+    content.appendChild(card);
+  });
+}
+
+function exportTXT() {
+  const orders = lastStatsOrders;
+  if (!orders.length) { alert('目前沒有訂單（或尚未讀取，請先按「重新整理」）'); return; }
+  const drinkCount = {};
+  orders.forEach(o => o.items.forEach(item => {
+    const key = `${item.name}（${item.ice} / ${item.sugar}）`;
+    drinkCount[key] = (drinkCount[key] || 0) + 1;
+  }));
+  let txt = `Mr. Wish 希望好茶 點餐統計\n匯出時間：${new Date().toLocaleString('zh-TW')}\n\n`;
+  txt += `【飲料彙整】\n`;
+  Object.entries(drinkCount).sort((a,b)=>b[1]-a[1]).forEach(([k,v]) => txt += `${k} × ${v}\n`);
+  txt += `\n【每人明細】\n`;
+  orders.forEach(o => {
+    txt += `\n▍${o.user}（${o.time}）\n`;
+    o.items.forEach(item => txt += `  - ${item.name} ${item.ice} ${item.sugar} 大杯 $${item.price}\n`);
+  });
+
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mrwish_orders.txt';
+  a.click();
+}
+
+// Enter key on name input
+document.getElementById('name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') startOrder();
+});
+</script>
+</body>
+</html>
